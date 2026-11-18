@@ -124,7 +124,12 @@ def on_batch(state, batch):
         return []
 
     # Flat: look for a dip that has just stopped falling.
-    if state.seq > TOTAL_BARS - NO_ENTRY_LAST_BARS - 1:
+    # Gate on bars actually seen, not the harness sequence number: a hello
+    # or empty batch advances the sequence without adding a bar, so the
+    # sequence can run ahead of the bar count near the end of the window.
+    # (On a one-bar-per-batch stream this is exactly the old gate:
+    # entries stop once 1040 bars have been seen, i.e. the last 400 bars.)
+    if len(_closes) > TOTAL_BARS - NO_ENTRY_LAST_BARS:
         return []
     if len(_closes) < DIP_LOOKBACK + 1:
         return []
